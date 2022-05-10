@@ -1,5 +1,7 @@
 package in.ashokit.service;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,7 @@ import in.ashokit.repository.CityRepository;
 import in.ashokit.repository.CountryRepository;
 import in.ashokit.repository.StateRepository;
 import in.ashokit.repository.UserAccountRepository;
+import in.ashokit.util.EmailUtils;
 
 @Service
 public class UserMgmtServiceImpl implements UserMgmtService {
@@ -34,6 +37,9 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 
 	@Autowired
 	private CityRepository cityRepo;
+
+	@Autowired
+	private EmailUtils emailUtils;
 
 	@Override
 	public String login(LoginForm loginForm) {
@@ -96,32 +102,50 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 		userEntity.setAccStatus("LOCKED");
 		userEntity.setPwd(generateRandomString());
 
-		userRepo.save(userEntity);
+		UserAccountEntity savedEntity = userRepo.save(userEntity);
 
-		// TODO: send email to user
+		String email = userRegForm.getEmail();
+		String subject = "Welcome to Ashok IT";
+		String fileName = "UNLOCK-ACC-EMAIL-BODY-TEMPLATE.txt";
+		String body = readMailBodyContent(fileName, userEntity);
 
-		return "SUCCESS";
+		boolean isSent = emailUtils.sendEmail(email, subject, body);
+
+		if (savedEntity.getUserId() != null && isSent) {
+			return "SUCCESS";
+		}
+
+		return "ERROR";
 	}
 
 	@Override
 	public String unlockAccount(UnlockAccForm unlockAccForm) {
-		if(!(unlockAccForm.getNewPwd().equals(unlockAccForm.getConfirmNewPwd()))) {
+		if (!(unlockAccForm.getNewPwd().equals(unlockAccForm.getConfirmNewPwd()))) {
 			return "NEW PASSWORD AND CONFIRM NEW PASSWORD ARE NOT SAME";
 		}
-	
 		return "ACCOUNT UNLOCKED";
 	}
 
 	@Override
 	public String forgotPassword(String email) {
 		UserAccountEntity entity = userRepo.findByEmail(email);
-		if(entity==null) {
-			return "EMAIL NOT REGISTERED";
+		if (entity == null) {
+			return "Invalid Email Id";
 		}
-		// Send email to user with temp pwd.
-		return "EMAIL SENT TO USER";
+
+		String fileName = "RECOVER-PASSWORD-EMAIL-BODY-TEMPLATE.txt";
+		String body = readMailBodyContent(fileName, entity);
+		String subject = "Recover Password-Ashok IT";
+
+		boolean isSent = emailUtils.sendEmail(email, subject, body);
+		if (isSent) {
+			return "Password sent to registered email";
+		}
+
+		return "ERROR";
 	}
 
+	// Method to generate random string
 	public String generateRandomString() {
 		int leftLimit = 48; // numeral '0'
 		int rightLimit = 122; // letter 'z'
@@ -131,9 +155,37 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 		String generatedString = random.ints(leftLimit, rightLimit + 1)
 				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97)).limit(targetStringLength)
 				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
-
 		return generatedString;
 
+	}
+
+	// Method to read mail body content
+	private String readMailBodyContent(String fileName, UserAccountEntity entity) {
+
+		String mailBody = null;
+
+		try {
+			StringBuffer sb = new StringBuffer();
+			FileReader fr = new FileReader(fileName);
+			BufferedReader br = new BufferedReader(fr);
+			String line = br.readLine();
+
+			while (line != null) {
+				sb.append(line);
+				line = br.readLine();
+			}
+
+			mailBody = sb.toString();
+			mailBody = mailBody.replace("{FNAME}", entity.getFname());
+			mailBody = mailBody.replace("{LNAME}", entity.getLname());
+			mailBody = mailBody.replace("{TEMP-PWD}", entity.getPwd());
+			mailBody = mailBody.replace("{EMAIL}", entity.getEmail());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return mailBody;
 	}
 
 }

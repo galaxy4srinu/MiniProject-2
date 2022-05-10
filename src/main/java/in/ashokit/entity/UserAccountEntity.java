@@ -20,7 +20,7 @@ public class UserAccountEntity {
 	@Id
 	@GeneratedValue
 	@Column(name = "USER_ID")
-	private int userId;
+	private Integer userId;
 
 	@Column(name = "FIRST_NAME")
 	private String fname;
