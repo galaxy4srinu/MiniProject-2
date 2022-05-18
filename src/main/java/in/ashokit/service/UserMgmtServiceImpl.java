@@ -114,15 +114,21 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 		if (savedEntity.getUserId() != null && isSent) {
 			return "SUCCESS";
 		}
-
 		return "ERROR";
 	}
 
 	@Override
 	public String unlockAccount(UnlockAccForm unlockAccForm) {
+
+		UserAccountEntity entity = userRepo.findByEmailAndPwd(unlockAccForm.getEmail(), unlockAccForm.getTempPwd());
+		
+		
 		if (!(unlockAccForm.getNewPwd().equals(unlockAccForm.getConfirmNewPwd()))) {
 			return "NEW PASSWORD AND CONFIRM NEW PASSWORD ARE NOT SAME";
 		}
+		entity.setPwd(unlockAccForm.getNewPwd());
+		entity.setAccStatus("UNLOCKED");
+		userRepo.save(entity);
 		return "ACCOUNT UNLOCKED";
 	}
 
@@ -132,7 +138,6 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 		if (entity == null) {
 			return "Invalid Email Id";
 		}
-
 		String fileName = "RECOVER-PASSWORD-EMAIL-BODY-TEMPLATE.txt";
 		String body = readMailBodyContent(fileName, entity);
 		String subject = "Recover Password-Ashok IT";
@@ -141,7 +146,6 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 		if (isSent) {
 			return "Password sent to registered email";
 		}
-
 		return "ERROR";
 	}
 
@@ -156,14 +160,11 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 				.filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97)).limit(targetStringLength)
 				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
 		return generatedString;
-
 	}
 
 	// Method to read mail body content
 	private String readMailBodyContent(String fileName, UserAccountEntity entity) {
-
 		String mailBody = null;
-
 		try {
 			StringBuffer sb = new StringBuffer();
 			FileReader fr = new FileReader(fileName);
@@ -174,17 +175,14 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 				sb.append(line);
 				line = br.readLine();
 			}
-
 			mailBody = sb.toString();
 			mailBody = mailBody.replace("{FNAME}", entity.getFname());
 			mailBody = mailBody.replace("{LNAME}", entity.getLname());
 			mailBody = mailBody.replace("{TEMP-PWD}", entity.getPwd());
 			mailBody = mailBody.replace("{EMAIL}", entity.getEmail());
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 		return mailBody;
 	}
 
