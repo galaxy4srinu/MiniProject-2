@@ -19,32 +19,27 @@ public class RegistrationRestController {
 
 	@GetMapping("/email-check/{emailId}")
 	public String emailCheck(@PathVariable("emailId") String email) {
-		String status = service.emailCheck(email);
-		return status;
+		return service.emailCheck(email);
 	}
 
 	@GetMapping("/country")
 	public Map<Integer, String> getCountries() {
-		Map<Integer, String> getCountries = service.loadCountries();
-		return getCountries;
+		return service.loadCountries();
 	}
 
 	@GetMapping("/states/{countryId}")
 	public Map<Integer, String> getStates(@PathVariable("countryId") Integer countrId) {
-		Map<Integer, String> getStates = service.loadStates(countrId);
-		return getStates;
+		return service.loadStates(countrId);
 	}
 
 	@GetMapping("/cities/{stateId}")
 	public Map<Integer, String> getCities(@PathVariable("stateId") Integer statesId) {
-		Map<Integer, String> getCities = service.loadCities(statesId);
-		return getCities;
+		return service.loadCities(statesId);
 	}
 
 	@PostMapping("/register")
 	public String registerUser(@RequestBody UserRegForm userRegForm) {
-		String status = service.registerUser(userRegForm);
-		return status;
+		return service.registerUser(userRegForm);
 	}
 
 }

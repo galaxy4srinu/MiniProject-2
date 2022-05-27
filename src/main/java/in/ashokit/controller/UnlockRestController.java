@@ -15,7 +15,7 @@ public class UnlockRestController {
 
 	@PostMapping("/unlock-account")
 	public String unlockUser(@RequestBody UnlockAccForm unlockAccForm) {
-		String status = service.unlockAccount(unlockAccForm);
-		return status;
+		return  service.unlockAccount(unlockAccForm);
+		
 	}
 }

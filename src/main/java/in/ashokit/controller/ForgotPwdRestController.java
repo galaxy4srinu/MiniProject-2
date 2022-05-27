@@ -14,7 +14,6 @@ public class ForgotPwdRestController {
 
 	@GetMapping("/forgotpassword/{emailId}")
 	public String forgotPassword(@PathVariable("emailId") String email) {
-		String status = service.forgotPassword(email);
-		return status;
+		return service.forgotPassword(email);
 	}
 }

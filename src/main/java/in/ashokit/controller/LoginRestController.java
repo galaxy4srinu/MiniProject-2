@@ -16,7 +16,6 @@ public class LoginRestController {
 
 	@PostMapping("/login")
 	public String login(@RequestBody LoginForm loginForm) {
-		String status = service.login(loginForm);
-		return status;
+		return service.login(loginForm);
 	}
 }

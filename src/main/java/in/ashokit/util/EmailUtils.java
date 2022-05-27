@@ -2,6 +2,8 @@ package in.ashokit.util;
 
 import javax.mail.internet.MimeMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -12,6 +14,8 @@ public class EmailUtils {
 
 	@Autowired
 	private JavaMailSender mailSender;
+
+	private Logger logger = LoggerFactory.getLogger(EmailUtils.class);
 
 	public boolean sendEmail(String to, String subject, String body) {
 		boolean isSent = false;
@@ -24,7 +28,7 @@ public class EmailUtils {
 			mailSender.send(mimeMessage);
 			isSent = true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 		return isSent;
 	}

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,13 +43,15 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 	@Autowired
 	private EmailUtils emailUtils;
 
+	private Logger logger = LoggerFactory.getLogger(UserMgmtServiceImpl.class);
+
 	@Override
 	public String login(LoginForm loginForm) {
 		UserAccountEntity entity = userRepo.findByEmailAndPwd(loginForm.getEmail(), loginForm.getPwd());
 		if (entity == null) {
 			return "Invalid credentials";
 		}
-		if (entity.getAccStatus().equals("LOCKED")) {
+		if ("LOCKED".equals(entity.getAccStatus())) {
 			return "Your account is locked";
 		}
 		return "SUCCESS";
@@ -161,30 +165,26 @@ public class UserMgmtServiceImpl implements UserMgmtService {
 
 	// Method to read mail body content
 	private String readMailBodyContent(String fileName, UserAccountEntity entity) {
-
 		String mailBody = null;
-
 		try {
-			StringBuffer sb = new StringBuffer();
+			StringBuilder sb = new StringBuilder();
 			FileReader fr = new FileReader(fileName);
 			BufferedReader br = new BufferedReader(fr);
 			String line = br.readLine();
-
 			while (line != null) {
 				sb.append(line);
 				line = br.readLine();
 			}
-
 			mailBody = sb.toString();
 			mailBody = mailBody.replace("{FNAME}", entity.getFname());
 			mailBody = mailBody.replace("{LNAME}", entity.getLname());
 			mailBody = mailBody.replace("{TEMP-PWD}", entity.getPwd());
 			mailBody = mailBody.replace("{EMAIL}", entity.getEmail());
-
+			br.close();
+			fr.close();
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
-
 		return mailBody;
 	}
 
